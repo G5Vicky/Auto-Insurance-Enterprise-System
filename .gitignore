@@ -1,0 +1,39 @@
+# ── Maven ────────────────────────────────────────────────────────
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# ── IDE ──────────────────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+.classpath
+.project
+.settings/
+*.launch
+.vscode/
+
+# ── Spring Boot ──────────────────────────────────────────────────
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# ── Logs ─────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── OS ───────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Environment / Secrets ────────────────────────────────────────
+.env
+*.env.local
+
+# ── Keep these ───────────────────────────────────────────────────
+!Dockerfile
+!.gitignore

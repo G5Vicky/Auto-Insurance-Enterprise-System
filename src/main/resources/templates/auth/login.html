@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Sign In — InsureTrack Enterprise</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Sora',sans-serif;background:#0f1117;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .login-bg{position:fixed;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(59,130,246,0.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(99,102,241,0.06) 0%,transparent 50%);pointer-events:none}
+    .login-wrap{width:100%;max-width:440px;position:relative;z-index:1}
+    .login-brand{text-align:center;margin-bottom:40px}
+    .login-logo{width:56px;height:56px;background:linear-gradient(135deg,#3b82f6,#6366f1);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:16px;box-shadow:0 8px 32px rgba(59,130,246,0.3)}
+    .login-title{font-size:24px;font-weight:700;letter-spacing:-0.5px}
+    .login-title span{color:#3b82f6}
+    .login-sub{color:#64748b;font-size:13px;margin-top:4px}
+    .login-card{background:#161b26;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:36px;box-shadow:0 8px 40px rgba(0,0,0,0.55)}
+    .form-label{display:block;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+    .form-group{margin-bottom:20px}
+    .input-wrap{position:relative}
+    .input-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#64748b;font-size:16px}
+    .form-control{width:100%;padding:12px 14px 12px 42px;background:#1d2535;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#e2e8f0;font-size:14px;font-family:'Sora',sans-serif;transition:.2s}
+    .form-control:focus{outline:none;border-color:#3b82f6;background:#212b40;box-shadow:0 0 0 3px rgba(59,130,246,0.15)}
+    .form-control::placeholder{color:#475569}
+    .btn-login{width:100%;padding:13px;background:linear-gradient(135deg,#3b82f6,#6366f1);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:600;font-family:'Sora',sans-serif;cursor:pointer;transition:.2s;margin-top:8px}
+    .btn-login:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(59,130,246,0.4)}
+    .btn-login:active{transform:none}
+    .alert{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+    .alert-danger{background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#fca5a5}
+    .alert-success{background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#6ee7b7}
+    .login-footer{text-align:center;margin-top:24px;font-size:12px;color:#475569}
+  </style>
+</head>
+<body>
+<div class="login-bg"></div>
+<div class="login-wrap">
+  <div class="login-brand">
+    <div class="login-logo"><i class="bi bi-shield-check" style="color:#fff"></i></div>
+    <div class="login-title">Insure<span>Track</span></div>
+    <div class="login-sub">Enterprise Insurance Management Platform</div>
+  </div>
+
+  <div class="login-card">
+    <div th:if="${loginError}" class="alert alert-danger">
+      <i class="bi bi-exclamation-circle"></i> Invalid username or password. Please try again.
+    </div>
+    <div th:if="${logoutMsg}" class="alert alert-success">
+      <i class="bi bi-check-circle"></i> You've been signed out successfully.
+    </div>
+
+    <form th:action="@{/login}" method="post">
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <div class="input-wrap">
+          <i class="bi bi-person input-icon"></i>
+          <input type="text" name="username" class="form-control" placeholder="Enter username" required autofocus/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-wrap">
+          <i class="bi bi-lock input-icon"></i>
+          <input type="password" name="password" class="form-control" placeholder="Enter password" required/>
+        </div>
+      </div>
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button type="submit" class="btn-login">
+        <i class="bi bi-box-arrow-in-right"></i> &nbsp;Sign In to Dashboard
+      </button>
+    </form>
+  </div>
+  <div class="login-footer">InsureTrack Enterprise v2.0 &nbsp;·&nbsp; All rights reserved</div>
+</div>
+</body>
+</html>

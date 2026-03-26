@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Premium Dues — InsureTrack</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+  <link rel="stylesheet" th:href="@{/css/app.css}"/>
+  <style>
+    @media(max-width:992px){#mobileMenuBtn{display:flex!important}#sidebarOverlay{display:block!important;opacity:0;pointer-events:none;transition:opacity .25s}#sidebarOverlay.show{opacity:1;pointer-events:all}}
+    .badge-paid    {background:rgba(16,185,129,.12);color:#059669;font-weight:700;}
+    .badge-overdue {background:rgba(239,68,68,.12);color:#dc2626;font-weight:700;}
+    .badge-due     {background:rgba(245,158,11,.12);color:#d97706;font-weight:700;}
+    .fee-chip      {font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;}
+    .fee-0   {background:rgba(16,185,129,.1);color:#059669;}
+    .fee-30  {background:rgba(245,158,11,.15);color:#b45309;}
+    .fee-100 {background:rgba(239,68,68,.15);color:#dc2626;}
+    .summary-strip{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px;}
+    .ss-card{flex:1;min-width:150px;padding:16px 20px;border-radius:12px;border:1px solid var(--border);}
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <div th:replace="~{fragments/navbar :: sidebar}"></div>
+  <div class="main-wrap">
+    <div th:replace="~{fragments/footer :: topbar('Premium Dues — Current Month')}"></div>
+    <div th:replace="~{fragments/footer :: overlay}"></div>
+    <main class="main-content">
+
+      <!-- Flash messages -->
+      <div th:if="${successMsg}" class="alert alert-success" data-auto-dismiss="1">
+        <i class="bi bi-check-circle-fill"></i>
+        <span th:text="${successMsg}"></span>
+        <button class="alert-close"><i class="bi bi-x"></i></button>
+      </div>
+      <div th:if="${errorMsg}" class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span th:text="${errorMsg}"></span>
+        <button class="alert-close"><i class="bi bi-x"></i></button>
+      </div>
+
+      <div class="page-header">
+        <div class="page-header-left">
+          <h1>Premium Dues</h1>
+          <div class="subtitle">Current month — all active policy premiums</div>
+        </div>
+        <div class="page-header-actions">
+          <a th:href="@{/premium/advance}" class="btn btn-ghost">
+            <i class="bi bi-calendar-plus"></i> Advance Payment
+          </a>
+          <a th:href="@{/premium/pay}" class="btn btn-primary">
+            <i class="bi bi-send"></i> Pay Premium
+          </a>
+        </div>
+      </div>
+
+      <!-- Summary strip -->
+      <div class="summary-strip">
+        <div class="ss-card" style="background:rgba(16,185,129,.05)">
+          <div style="font-size:12px;color:var(--text-m);margin-bottom:4px">Paid</div>
+          <div style="font-size:26px;font-weight:800;color:#059669" th:text="${paidCount}">0</div>
+        </div>
+        <div class="ss-card" style="background:rgba(239,68,68,.05)">
+          <div style="font-size:12px;color:var(--text-m);margin-bottom:4px">Overdue</div>
+          <div style="font-size:26px;font-weight:800;color:#dc2626" th:text="${overdueCount}">0</div>
+        </div>
+        <div class="ss-card" style="background:rgba(59,130,246,.05)">
+          <div style="font-size:12px;color:var(--text-m);margin-bottom:4px">Total Dues Pending</div>
+          <div style="font-size:26px;font-weight:800;color:#3b82f6">
+            ₹<span th:text="${#numbers.formatDecimal(totalDue,1,'COMMA',2,'POINT')}">0</span>
+          </div>
+        </div>
+        <div class="ss-card" style="background:rgba(107,114,128,.05)">
+          <div style="font-size:12px;color:var(--text-m);margin-bottom:4px">Total Policies</div>
+          <div style="font-size:26px;font-weight:800" th:text="${dues.size()}">0</div>
+        </div>
+      </div>
+
+      <!-- Dues table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="ch-icon" style="background:rgba(59,130,246,.12);color:#3b82f6"><i class="bi bi-calendar-check"></i></div>
+          Current Month Premium Schedule
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Policy ID</th>
+              <th>Policy Name</th>
+              <th>Holder</th>
+              <th>Vehicle</th>
+              <th>Due Date</th>
+              <th>Premium (₹)</th>
+              <th>Late Fee</th>
+              <th>Total Due</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr></thead>
+            <tbody>
+              <tr th:if="${dues.empty}">
+                <td colspan="10" style="text-align:center;padding:40px;color:var(--text-m)">
+                  No active policies found for this month.
+                </td>
+              </tr>
+              <tr th:each="d : ${dues}"
+                  th:class="${d.paid} ? '' : (${d.overdue} ? 'tr-danger' : '')">
+                <td class="mono fw-600" th:text="'#' + ${d.policyId}"></td>
+                <td th:text="${d.policyName}"></td>
+                <td th:text="${d.policyHolderName}"></td>
+                <td class="mono fs-12" th:text="${d.vehicleModel} + (${d.vehicleNumber != null} ? ' (' + ${d.vehicleNumber} + ')' : '')"></td>
+                <td th:text="${#temporals.format(d.dueDate,'dd MMM yyyy')}"></td>
+                <td class="fw-600">₹<span th:text="${#numbers.formatDecimal(d.premiumAmount,1,'COMMA',2,'POINT')}"></span></td>
+                <td>
+                  <span th:if="${d.paid}" class="fee-chip fee-0">₹0</span>
+                  <span th:if="${!d.paid and d.overdueTier == 'NONE'}" class="fee-chip fee-0">₹0</span>
+                  <span th:if="${!d.paid and d.overdueTier == 'LATE_30'}" class="fee-chip fee-30">+₹30</span>
+                  <span th:if="${!d.paid and d.overdueTier == 'LATE_100'}" class="fee-chip fee-100">+₹100</span>
+                </td>
+                <td class="fw-700">₹<span th:text="${#numbers.formatDecimal(d.totalDue,1,'COMMA',2,'POINT')}"></span></td>
+                <td>
+                  <span th:if="${d.paid}" class="badge badge-paid">Paid</span>
+                  <span th:if="${!d.paid and d.overdue}" class="badge badge-overdue">Overdue</span>
+                  <span th:if="${!d.paid and !d.overdue}" class="badge badge-due">Due</span>
+                </td>
+                <td>
+                  <a th:if="${!d.paid}"
+                     th:href="@{/premium/pay(policyId=${d.policyId})}"
+                     class="btn btn-sm btn-primary">
+                    <i class="bi bi-send"></i> Pay
+                  </a>
+                  <span th:if="${d.paid}" style="color:var(--text-d);font-size:12px">
+                    <i class="bi bi-check-circle-fill" style="color:#059669"></i> Done
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Info box -->
+      <div class="card" style="margin-top:16px;padding:16px 20px;background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.25)">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <i class="bi bi-info-circle-fill" style="color:#d97706;font-size:20px;margin-top:2px"></i>
+          <div>
+            <div style="font-weight:700;margin-bottom:6px">Late Fee Policy</div>
+            <div style="font-size:13px;color:var(--text-m);line-height:1.6">
+              <strong>₹30 late fee</strong> applies after the due date and before next month's due date.<br/>
+              <strong>₹100 late fee</strong> applies if the premium is unpaid for more than one month.<br/>
+              Late fees are added automatically and cannot be waived.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

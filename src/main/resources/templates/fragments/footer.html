@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<body>
+
+<!-- Topbar fragment with inline notification dropdown -->
+<header th:fragment="topbar(title)" class="topbar">
+  <button class="hamburger" id="hamburger" onclick="toggleSidebar()" type="button" aria-label="Toggle menu">
+    <i class="bi bi-list"></i>
+  </button>
+  <h2 class="topbar-title" th:text="${title}"></h2>
+  <div class="topbar-actions">
+
+    <!-- Notification Bell with Dropdown -->
+    <div class="notif-bell-wrap" id="notifBellWrap">
+      <button class="topbar-icon-btn" id="notifBellBtn" onclick="toggleNotifDropdown(event)" type="button" title="Notifications" aria-label="Notifications">
+        <i class="bi bi-bell"></i>
+        <span id="topbarNotifBadge" class="notif-badge-dot" style="display:none"></span>
+      </button>
+      <!-- Dropdown panel -->
+      <div class="notif-dropdown" id="notifDropdown" style="display:none">
+        <div class="notif-dropdown-header">
+          <span class="notif-dropdown-title"><i class="bi bi-bell"></i> Notifications</span>
+          <a th:href="@{/notifications}" class="notif-dropdown-viewall">View All</a>
+        </div>
+        <div id="notifDropdownList" class="notif-dropdown-list">
+          <div class="notif-dropdown-loading"><i class="bi bi-hourglass-split"></i> Loading...</div>
+        </div>
+        <div class="notif-dropdown-footer">
+          <form th:action="@{/notifications/mark-all-read}" method="post" style="display:inline">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="notif-mark-all-btn"><i class="bi bi-check2-all"></i> Mark All Read</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <a th:href="@{/policies/add}" class="btn btn-sm btn-primary">
+      <i class="bi bi-plus"></i> New Policy
+    </a>
+    <a th:href="@{/payments/make}" class="btn btn-sm btn-ghost">
+      <i class="bi bi-send"></i> Payment
+    </a>
+  </div>
+</header>
+
+<!-- Mobile overlay -->
+<div th:fragment="overlay" class="mobile-overlay" id="mobileOverlay" onclick="closeSidebar()"></div>
+<div th:fragment="mobileOverlay" class="mobile-overlay" id="mobileOverlayAlt" onclick="closeSidebar()"></div>
+
+</body>
+</html>

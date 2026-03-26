@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payments &mdash; InsureTrack</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+  <link rel="stylesheet" th:href="@{/css/app.css}"/>
+
+<style>
+@media(max-width:992px){
+  #mobileMenuBtn{display:flex!important}
+  #sidebarOverlay{display:block!important;opacity:0;pointer-events:none;transition:opacity .25s}
+  #sidebarOverlay.show{opacity:1;pointer-events:all}
+}
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div th:replace="~{fragments/navbar :: sidebar}"></div>
+  <div class="main-wrap">
+    <div th:replace="~{fragments/footer :: topbar('Payments')}"></div>
+    <div th:replace="~{fragments/footer :: overlay}"></div>
+    <main class="main-content">
+
+      <div th:if="${successMsg}" class="alert alert-success" data-auto-dismiss="1">
+        <i class="bi bi-check-circle-fill"></i>
+        <span th:text="${successMsg}"></span>
+        <button class="alert-close"><i class="bi bi-x"></i></button>
+      </div>
+
+      <div class="page-header">
+        <div class="page-header-left">
+          <h1>Payment Ledger</h1>
+          <div class="subtitle">All insurance premium transactions</div>
+        </div>
+        <div class="page-header-actions">
+          <a th:href="@{/payments/make}" class="btn btn-primary"><i class="bi bi-send"></i> Make Payment</a>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <span class="fb-label">Filter by status:</span>
+        <form th:action="@{/payments}" method="get">
+          <select name="status" class="form-select" style="width:160px" onchange="this.form.submit()">
+            <option value="">All Statuses</option>
+            <option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.label}"
+                    th:selected="${appliedStatus == s}"></option>
+          </select>
+        </form>
+        <a th:href="@{/payments}" class="btn btn-ghost btn-sm" title="Reset"><i class="bi bi-arrow-counterclockwise"></i></a>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <a th:href="@{/reports/failed}" class="btn btn-ghost btn-sm"><i class="bi bi-exclamation-triangle text-danger"></i> Failed Report</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>#</th>
+              <th>Policy</th>
+              <th>Holder</th>
+              <th>Vehicle</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Retry Info</th>
+              <th>Actions</th>
+            </tr></thead>
+            <tbody>
+              <tr th:each="p : ${paymentViews}">
+                <td class="td-id"><a th:href="@{/payments/{id}(id=${p.paymentId})}" th:text="'#'+${p.paymentId}"></a></td>
+                <td><a th:href="@{/policies/{id}(id=${p.policyId})}" th:text="${p.policyName}" class="td-em"></a></td>
+                <td th:text="${p.policyHolderName}"></td>
+                <td class="mono fs-12" th:text="${p.vehicleNumber ?: '—'}"></td>
+                <td class="fw-600" th:text="${'₹' + #numbers.formatDecimal(p.paymentAmount,0,'COMMA',2,'POINT')}"></td>
+                <td th:text="${p.paymentDate}"></td>
+                <td>
+                  <span class="badge"
+                    th:classappend="${p.paymentStatus.name()=='SUCCESS'}?'badge-success':(${p.paymentStatus.name()=='FAILED'}?'badge-danger':'badge-warning')"
+                    th:text="${p.paymentStatus.label}"></span>
+                </td>
+                <td>
+                  <span th:if="${p.retryOfPaymentId != null}" class="badge badge-info fs-12"
+                        th:text="'↩ #' + ${p.retryOfPaymentId}"></span>
+                  <span th:if="${p.retryCount != null and p.retryCount > 0 and p.retryOfPaymentId == null}"
+                        class="badge badge-grey" th:text="${p.retryCount} + ' retries'"></span>
+                </td>
+                <td>
+                  <div style="display:flex;gap:4px">
+                    <a th:href="@{/payments/{id}(id=${p.paymentId})}" class="btn btn-ghost btn-icon" title="View">
+                      <i class="bi bi-eye"></i></a>
+                    <form th:if="${p.paymentStatus.name() == 'FAILED'}"
+                          th:action="@{/payments/{id}/retry(id=${p.paymentId})}" method="post" style="display:inline">
+                      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                      <button class="btn btn-ghost btn-icon" style="color:var(--warning)" title="Retry Payment" type="submit">
+                        <i class="bi bi-arrow-clockwise"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(paymentViews)}">
+                <td colspan="9">
+                  <div class="empty-state">
+                    <i class="bi bi-receipt"></i>
+                    <h3>No payments found</h3>
+                    <p>Try changing the filter or <a th:href="@{/payments/make}">make a payment</a>.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

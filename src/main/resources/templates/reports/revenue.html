@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Revenue Report &mdash; InsureTrack</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+  <link rel="stylesheet" th:href="@{/css/app.css}"/>
+<style>@media(max-width:992px){#mobileMenuBtn{display:flex!important}#sidebarOverlay{display:block!important;opacity:0;pointer-events:none;transition:opacity .25s}#sidebarOverlay.show{opacity:1;pointer-events:all}}</style>
+</head>
+<body>
+<div class="app-layout">
+  <div th:replace="~{fragments/navbar :: sidebar}"></div>
+  <div class="main-wrap">
+    <div th:replace="~{fragments/footer :: topbar('Reports: Revenue')}"></div>
+    <div th:replace="~{fragments/footer :: overlay}"></div>
+    <main class="main-content">
+
+      <div class="page-header">
+        <div class="page-header-left">
+          <h1>Revenue Report</h1>
+          <div class="subtitle" th:text="'From ' + ${fromDate} + ' to ' + ${toDate}"></div>
+        </div>
+      </div>
+
+      <div class="sub-tabs">
+        <a th:href="@{/reports/expiry}" class="sub-tab" th:classappend="${activeReport=='expiry'}?' active':''">
+          <i class="bi bi-calendar-x"></i> Expiring</a>
+        <a th:href="@{/reports/revenue}" class="sub-tab" th:classappend="${activeReport=='revenue'}?' active':''">
+          <i class="bi bi-currency-rupee"></i> Revenue</a>
+        <a th:href="@{/reports/failed}" class="sub-tab" th:classappend="${activeReport=='failed'}?' active':''">
+          <i class="bi bi-exclamation-triangle"></i> Failed</a>
+      </div>
+
+      <div class="card mb-4" style="padding:18px">
+        <form th:action="@{/reports/revenue}" method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+          <div class="form-field" style="flex:1;min-width:140px">
+            <label class="form-label">From Date</label>
+            <input type="date" name="from" class="form-control" th:value="${fromDate}"/>
+          </div>
+          <div class="form-field" style="flex:1;min-width:140px">
+            <label class="form-label">To Date</label>
+            <input type="date" name="to" class="form-control" th:value="${toDate}"/>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button type="submit" class="btn btn-primary">Apply</button>
+            <a th:href="@{/reports/revenue}" class="btn btn-ghost"><i class="bi bi-arrow-counterclockwise"></i></a>
+          </div>
+        </form>
+      </div>
+
+      <div class="grid-3 mb-4">
+        <div class="stat-card">
+          <div class="stat-top"><div class="stat-icon" style="background:rgba(16,185,129,.12);color:#10b981"><i class="bi bi-currency-rupee"></i></div></div>
+          <div class="stat-value" th:text="'&#8377;' + ${#numbers.formatDecimal(totalRevenue,0,'COMMA',0,'POINT')}">0</div>
+          <div class="stat-label">Total Revenue</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><div class="stat-icon" style="background:rgba(59,130,246,.12);color:#3b82f6"><i class="bi bi-receipt"></i></div></div>
+          <div class="stat-value" th:text="${#lists.size(payments)}">0</div>
+          <div class="stat-label">Successful Payments</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><div class="stat-icon" style="background:rgba(139,92,246,.12);color:#8b5cf6"><i class="bi bi-calculator"></i></div></div>
+          <div class="stat-value" th:text="${#lists.size(payments) > 0} ? ('&#8377;' + ${#numbers.formatDecimal(totalRevenue / #lists.size(payments),0,'COMMA',0,'POINT')}) : '—'">0</div>
+          <div class="stat-label">Avg per Payment</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Date</th><th>Policy</th><th>Holder</th><th>Amount (&#8377;)</th></tr></thead>
+            <tbody>
+              <tr th:each="p : ${payments}">
+                <td class="td-id"><a th:href="@{/payments/{id}(id=${p.paymentId})}" th:text="'#'+${p.paymentId}"></a></td>
+                <td th:text="${p.paymentDate}"></td>
+                <td th:if="${p.policy != null}"><a th:href="@{/policies/{id}(id=${p.policy.policyId})}" th:text="${p.policy.policyName}" class="td-em"></a></td>
+                <td th:if="${p.policy == null}" class="text-dim">—</td>
+                <td th:text="${p.policy != null ? p.policy.policyHolderName : '—'}"></td>
+                <td class="fw-600" th:text="${#numbers.formatDecimal(p.paymentAmount,0,'COMMA',2,'POINT')}"></td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(payments)}">
+                <td colspan="5"><div class="empty-state"><i class="bi bi-bar-chart"></i><h3>No revenue in this period</h3></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

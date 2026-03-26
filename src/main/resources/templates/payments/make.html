@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Make Payment &mdash; InsureTrack</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+  <link rel="stylesheet" th:href="@{/css/app.css}"/>
+<style>@media(max-width:992px){#mobileMenuBtn{display:flex!important}#sidebarOverlay{display:block!important;opacity:0;pointer-events:none;transition:opacity .25s}#sidebarOverlay.show{opacity:1;pointer-events:all}}</style>
+</head>
+<body>
+<div class="app-layout">
+  <div th:replace="~{fragments/navbar :: sidebar}"></div>
+  <div class="main-wrap">
+    <div th:replace="~{fragments/footer :: topbar('Make Payment')}"></div>
+    <div th:replace="~{fragments/footer :: overlay}"></div>
+    <main class="main-content">
+      <a th:href="@{/payments}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Payments</a>
+      <div style="max-width:700px;margin:0 auto">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h1>New Payment</h1>
+            <div class="subtitle">Record a premium payment against a policy</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="ch-icon" style="background:rgba(59,130,246,.12);color:#3b82f6"><i class="bi bi-send"></i></div>
+            Payment Details
+          </div>
+          <div class="card-body">
+            <div class="form-section">
+              <div class="form-section-title"><i class="bi bi-search"></i> Step 1 &mdash; Find Policy</div>
+              <div class="form-field">
+                <label class="form-label">Policy ID <span class="req">*</span></label>
+                <div class="input-group">
+                  <input id="policyLookup" type="number" class="form-control"
+                         placeholder="Enter Policy ID (e.g. 1, 2, 3...)" min="1"
+                         th:value="${prefillPolicyId}"/>
+                  <button type="button" id="lookupBtn" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Lookup
+                  </button>
+                </div>
+                <div id="lookupError" class="invalid-feedback" style="display:none"></div>
+              </div>
+              <div id="policyInfoCard" class="policy-preview" style="display:none">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                  <span style="font-size:12px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.06em">Policy Found</span>
+                  <span id="policyStatusBadge" class="badge badge-success">Active</span>
+                </div>
+                <div class="policy-preview-grid">
+                  <div><div class="ppg-label">Policy Name</div><div class="ppg-value fw-600" id="infoName"></div></div>
+                  <div><div class="ppg-label">Holder</div><div class="ppg-value" id="infoHolder"></div></div>
+                  <div><div class="ppg-label">Vehicle</div><div class="ppg-value mono fs-12" id="infoVehicle"></div></div>
+                  <div><div class="ppg-label">Annual Premium</div><div class="ppg-value big" id="infoPremium"></div></div>
+                  <div><div class="ppg-label">Coverage</div><div class="ppg-value fs-12" id="infoCoverage"></div></div>
+                  <div><div class="ppg-label">Valid Until</div><div class="ppg-value fs-12" id="infoEnd"></div></div>
+                </div>
+                <div id="inactiveWarning" class="alert alert-warning" style="display:none;margin-top:12px;margin-bottom:0">
+                  <i class="bi bi-exclamation-triangle"></i> Policy is not ACTIVE. Proceed with caution.
+                </div>
+              </div>
+            </div>
+            <div class="form-section">
+              <div class="form-section-title"><i class="bi bi-currency-rupee"></i> Step 2 &mdash; Payment Info</div>
+              <form id="paymentForm" th:action="@{/payments/make}" method="post" novalidate>
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="hidden" id="policyId" name="policyId" th:value="${prefillPolicyId}"/>
+                <div class="form-grid form-grid-2">
+                  <div class="form-field">
+                    <label class="form-label">Amount (&#8377;) <span class="req">*</span></label>
+                    <input id="paymentAmount" type="number" step="0.01" min="1" name="paymentAmount"
+                           class="form-control" th:value="${prefillAmount}" placeholder="0.00" required/>
+                  </div>
+                  <div class="form-field">
+                    <label class="form-label">Payment Date <span class="req">*</span></label>
+                    <input id="paymentDate" type="date" name="paymentDate" class="form-control"
+                           th:value="${prefillDate}" required/>
+                  </div>
+                </div>
+                <div class="form-field mt-2">
+                  <label class="form-label">Remarks (optional)</label>
+                  <input type="text" name="remarks" class="form-control" placeholder="e.g. Monthly installment"/>
+                </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px;border-top:1px solid var(--border);padding-top:20px">
+                  <a th:href="@{/payments}" class="btn btn-ghost">Cancel</a>
+                  <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
+                    <i class="bi bi-check-lg"></i> Confirm Payment
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+<script th:inline="javascript">
+/*<![CDATA[*/
+const prefillId = /*[[${prefillPolicyId}]]*/ null;
+(function(){
+  var d=new Date().toISOString().split("T")[0];
+  var el=document.getElementById("paymentDate");
+  if(el && !el.value) el.value=d;
+})();
+if(prefillId) doLookup(prefillId);
+document.getElementById("lookupBtn").addEventListener("click",function(){
+  var id=document.getElementById("policyLookup").value;
+  if(!id||isNaN(id)||Number(id)<1){showError("Please enter a valid Policy ID.");return;}
+  doLookup(id);
+});
+document.getElementById("policyLookup").addEventListener("keydown",function(e){
+  if(e.key==="Enter"){e.preventDefault();document.getElementById("lookupBtn").click();}
+});
+function showError(msg){
+  var el=document.getElementById("lookupError");
+  el.textContent=msg;el.style.display="block";
+  document.getElementById("policyInfoCard").style.display="none";
+  document.getElementById("submitBtn").disabled=true;
+  document.getElementById("policyId").value="";
+}
+function doLookup(id){
+  document.getElementById("lookupError").style.display="none";
+  document.getElementById("lookupBtn").innerHTML='<i class="bi bi-hourglass-split"></i>';
+  fetch("/payments/api/policyDetails?policyId="+id)
+    .then(function(r){return r.json();})
+    .then(function(d){
+      document.getElementById("lookupBtn").innerHTML='<i class="bi bi-search"></i> Lookup';
+      if(d.error){showError(d.error);return;}
+      document.getElementById("infoName").textContent=d.policyName||"";
+      document.getElementById("infoHolder").textContent=d.policyHolderName||"";
+      document.getElementById("infoVehicle").textContent=(d.vehicleModel||"")+(d.vehicleNumber?" ("+d.vehicleNumber+")":"");
+      document.getElementById("infoPremium").textContent=d.policyAmount?"₹"+parseFloat(d.policyAmount).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2}):"—";
+      document.getElementById("infoCoverage").textContent=d.coverageType||"—";
+      document.getElementById("infoEnd").textContent=d.policyEndDate||"—";
+      var badge=document.getElementById("policyStatusBadge");
+      badge.textContent=d.statusLabel||d.policyStatus;
+      badge.className="badge "+(d.active?"badge-success":"badge-warning");
+      document.getElementById("inactiveWarning").style.display=d.active?"none":"flex";
+      document.getElementById("policyInfoCard").style.display="block";
+      document.getElementById("policyId").value=id;
+      var amtEl=document.getElementById("paymentAmount");
+      if(!amtEl.value&&d.policyAmount) amtEl.value=parseFloat(d.policyAmount).toFixed(2);
+      var dtEl=document.getElementById("paymentDate");
+      if(d.nextPaymentDate&&!dtEl.value) dtEl.value=d.nextPaymentDate;
+      document.getElementById("submitBtn").disabled=false;
+    })
+    .catch(function(){
+      document.getElementById("lookupBtn").innerHTML='<i class="bi bi-search"></i> Lookup';
+      showError("Could not reach server.");
+    });
+}
+/*]]>*/
+</script>
+</body>
+</html>
